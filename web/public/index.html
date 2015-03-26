@@ -2,11 +2,40 @@
 <html>
 <head>
   <link rel="stylesheet" type="text/css" href="styles.css" />
+  <script src="../../client/bower_components/jquery/jquery.min.js"></script>
 </head>
 <body>
   Enter a URL here:
   <form method="POST">
-    <input type="input" name="url"></input>
+    <input type="input" name="url" id="urlValue"></input>
+    <input type="submit" id="urlButton"></input>
   </form>
 </body>
+<script>
+
+  var app = {
+    server: 'http://127.0.0.1:8080',
+    send: function(message){
+      $.ajax({ 
+        url: this.server,
+        type: 'POST',
+        data: JSON.stringify(message),
+        contentType: 'application/json',
+        success: function(data){
+          console.log('url sent');
+        }
+      })
+    }
+  };
+
+  $('#urlButton').on('click', function(evt){
+    var input = $('#urlValue').val();
+    app.send(input);
+    console.log('input: ', input);
+    evt.preventDefault();
+  })
+
+
+
+</script>
 </html>

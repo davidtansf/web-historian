@@ -12,6 +12,7 @@ var server = http.createServer(handler.handleRequest);
 
 if (module.parent) {
   module.exports = server;
+  console.log("MODULE PARENT: Listening on http://" + ip + ":" + port);
 } else {
   server.listen(port, ip);
   console.log("Listening on http://" + ip + ":" + port);
