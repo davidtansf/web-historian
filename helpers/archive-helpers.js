@@ -25,17 +25,52 @@ exports.initialize = function(pathsObj){
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = function(){
+exports.readListOfUrls = function(callback){
+//  console.log("readListOfUrls gets called");
+  fs.readFile('../archives/sites.txt', function (err, data) {
+    if (err) {
+      console.log("CANT READ FILE");
+    }
+    console.log("READLIST");
+    callback(data.toString('utf-8'));
+  })
+  // return list of urls, but in what format? object, array, string (look in spec)
 };
 
-exports.isUrlInList = function(){
+exports.isUrlInList = function(url){
+  // check in txt file for url 
+  //if in list return true, else false
+
+  this.readListOfUrls(function(list) {
+    console.log("LIST passed in: ", list);
+    console.log("URL passed in: ", url);
+    var splitList = list.split("\n");
+    console.log("splitList.length: ", splitList.length)
+    for (var i = 0 ; i < splitList.length ; i++){
+      console.log("splitlist[i]: ", splitList[i]);
+      if (url === splitList[i]){
+        console.log("TRUE");
+        return true;
+      }
+    }
+    console.log("FALSE");
+    return false;
+  });
+
 };
 
-exports.addUrlToList = function(){
+exports.addUrlToList = function(url){
+  // is url in list? if so, send null or error
+  // if not, add to list (queue)
+
 };
 
-exports.isUrlArchived = function(){
+exports.isUrlArchived = function(url){
+  // check archive folder for site
+  // if found, return true, else false
 };
 
-exports.downloadUrls = function(){
+exports.downloadUrls = function(list){
+  // take all the urls in .txt file, grab the sites, and put them into archive directory
+  // BEAST
 };
