@@ -27,42 +27,59 @@ exports.initialize = function(pathsObj){
 
 exports.readListOfUrls = function(callback){
 //  console.log("readListOfUrls gets called");
-  fs.readFile('../archives/sites.txt', function (err, data) {
+  fs.readFile('archives/sites.txt', function (err, data) {
     if (err) {
+      // console.log("data.toString: ", data.toString('utf-8'));
+      console.log("ERR: ", err);
       console.log("CANT READ FILE");
+    } else {
+      console.log("READLIST");
+      console.log('data.toString: ', data.toString('utf-8'))
+      callback(data.toString('utf-8'));
     }
-    console.log("READLIST");
-    callback(data.toString('utf-8'));
   })
   // return list of urls, but in what format? object, array, string (look in spec)
 };
 
-exports.isUrlInList = function(url){
+exports.isUrlInList = function(url, callback){
   // check in txt file for url 
   //if in list return true, else false
 
   this.readListOfUrls(function(list) {
+    var found = false;
     console.log("LIST passed in: ", list);
     console.log("URL passed in: ", url);
     var splitList = list.split("\n");
-    console.log("splitList.length: ", splitList.length)
     for (var i = 0 ; i < splitList.length ; i++){
       console.log("splitlist[i]: ", splitList[i]);
       if (url === splitList[i]){
         console.log("TRUE");
-        return true;
+        callback(true);
+        found = true;
+        break;
       }
     }
-    console.log("FALSE");
-    return false;
+    if (!found) {
+      console.log("FALSE");
+      callback(false);
+    }
   });
 
 };
 
 exports.addUrlToList = function(url){
-  // is url in list? if so, send null or error
-  // if not, add to list (queue)
-
+  this.isUrlInList(url, function (found) {
+    if (found) {
+      //do nothing for now
+    } else {
+      console.log("NOT FOUND SO WRITING");
+      fs.appendFile('archives/sites.txt', "\n" + url.toString('utf-8'), function (err) {
+        if (err) {
+          console.log("CANT WRITE TO FILE");
+        }
+      });
+    }
+  });
 };
 
 exports.isUrlArchived = function(url){

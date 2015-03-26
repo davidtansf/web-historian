@@ -2,6 +2,7 @@ var path = require('path');
 var archive = require('../helpers/archive-helpers');
 // require more modules/folders here!
 var httpHelpers = require('./http-helpers.js');
+var url = require('url');
 
 var headers = httpHelpers.headers;
 
@@ -28,6 +29,21 @@ var headers = httpHelpers.headers;
 // }
 
 exports.handleRequest = function (req, res) {
+  
+
+  if (req.method === 'GET'){
+
+    var urlobj = url.parse(req.url, true);
+    console.log("URLPATH: ", urlobj.path);
+    httpHelpers.serveAssets(res, urlobj.path, function () {
+
+    })
+    if (urlobj.path === "/") {
+      console.log("TRUE don't escape");
+    }
+    res.writeHead(200, headers);
+    res.end("/<input");
+  }
 
   if (req.method === 'OPTIONS'){
     res.writeHead(202, headers);
@@ -43,7 +59,7 @@ exports.handleRequest = function (req, res) {
     //  saveSite(requestBody);
     })
     req.on('end', function(){
-      archive.isUrlInList(JSON.parse(requestBody));
+      archive.addUrlToList(JSON.parse(requestBody));
     })
     res.writeHead(202, headers);
     res.end();
