@@ -28,6 +28,45 @@ var headers = httpHelpers.headers;
 //   });
 // }
 
+var actions = {
+  'GET': function (req, res) {
+    var urlobj = url.parse(req.url, true);
+    var urlPath = urlobj.pathname === '/' ? '/index.html' : urlobj.pathname;
+    httpHelpers.serveAssets(res, urlPath);
+  },
+  
+  'POST': function(req, res) {
+    var requestBody = '';  //MAKE OBJECT
+    req.on('data', function (data) {
+      requestBody += data;  //SET URL PROP OF OBJECT
+      console.log(requestBody);
+    //  archive.readListOfUrls();
+    //  saveSite(requestBody);
+    });
+    req.on('end', function(){
+      archive.addUrlToList(JSON.parse(requestBody));
+    });
+    res.writeHead(202, headers);
+    res.end();
+    // res.end(archive.paths.list);
+  },
+
+  'OPTIONS': function (req, res) {
+    res.writeHead(202, headers);
+    res.end();
+  }  
+};
+
+exports.handleRequest = function (req, res) {
+  var handler = actions[req.method];
+  if (handler) {
+    handler(req, res);
+  } else {
+    httpHelpers.send404(res);
+  }
+}; 
+
+/*
 exports.handleRequest = function (req, res) {
   
 
@@ -51,9 +90,9 @@ exports.handleRequest = function (req, res) {
   }
 
   if (req.method === 'POST') {
-    var requestBody = '';
+    var requestBody = '';  //MAKE OBJECT
     req.on('data', function (data) {
-      requestBody += data;
+      requestBody += data;  //SET URL PROP OF OBJECT
       console.log(requestBody);
     //  archive.readListOfUrls();
     //  saveSite(requestBody);
@@ -67,3 +106,4 @@ exports.handleRequest = function (req, res) {
   }
 
 };
+*/
