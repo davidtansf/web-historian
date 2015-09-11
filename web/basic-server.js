@@ -10,7 +10,7 @@ var port = 8080;
 var ip = "127.0.0.1";
 var server = http.createServer(handler.handleRequest);
 
-if (module.parent) {
+if (module.parent) { // if being loaded by another script
   module.exports = server;
   console.log("MODULE PARENT: Listening on http://" + ip + ":" + port);
 } else {

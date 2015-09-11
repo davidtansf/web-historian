@@ -1,109 +1,68 @@
 var path = require('path');
 var archive = require('../helpers/archive-helpers');
-// require more modules/folders here!
-var httpHelpers = require('./http-helpers.js');
 var url = require('url');
+var helpers = require('./http-helpers');
+var querystring = require('querystring');
 
-var headers = httpHelpers.headers;
+var getSite = function(request, response){
+  var urlPath = url.parse(request.url).pathname;
 
-// var saveSite = function(url) { 
-// // wait for POST data to be collected?
-// // is it in sites.txt
+  // / means index.html
+  if (urlPath === '/') { urlPath = '/index.html'; }
 
-//   // if yes 
-//   archive.isUrlinList(url, function(isInList) {
-   
-//     if (isInList) { // if yes
-//       archive.isUrlArchived(url, function(isArchived){
-//         if (isArchived) {// if yes 
-//           // display archived page
-//         } else {
-//           // already in queue, alert wait
-//         }  
-//       })   
-//     } else { // if not in list
-//       // append to sites.txt
-//       // cron job will do its thing
-//     }
-//   });
-// }
+  helpers.serveAssets(response, urlPath, function() {
+    // trim leading slash if present
+    if (urlPath[0] === '/') { urlPath = urlPath.slice(1)}
 
-var actions = {
-  'GET': function (req, res) {
-    var urlobj = url.parse(req.url, true);
-    var urlPath = urlobj.pathname === '/' ? '/index.html' : urlobj.pathname;
-    httpHelpers.serveAssets(res, urlPath);
-  },
-  
-  'POST': function(req, res) {
-    var requestBody = '';  //MAKE OBJECT
-    req.on('data', function (data) {
-      requestBody += data;  //SET URL PROP OF OBJECT
-      console.log(requestBody);
-    //  archive.readListOfUrls();
-    //  saveSite(requestBody);
+    archive.isUrlInList(urlPath, function(found){
+      if (found) {
+        helpers.sendRedirect(response, '/loading.html');
+      } else {
+        helpers.send404(response);
+      }
     });
-    req.on('end', function(){
-      archive.addUrlToList(JSON.parse(requestBody));
-    });
-    res.writeHead(202, headers);
-    res.end();
-    // res.end(archive.paths.list);
-  },
-
-  'OPTIONS': function (req, res) {
-    res.writeHead(202, headers);
-    res.end();
-  }  
+  });
 };
 
+var saveSite = function(request, response){
+  helpers.collectData(request, function(data) {
+    var url = querystring.parse(data).url;
+    // check sites.txt for web site
+    archive.isUrlInList(url, function(found){
+      if (found) { // found site
+        // check if site is on disk
+        archive.isUrlArchived(url, function(exists) {
+          if (exists) {
+            // redirect to site page (/www.google.com)
+            helpers.sendRedirect(response, '/' + url);
+          } else {
+            // Redirect to loading.html
+            helpers.sendRedirect(response, '/loading.html');
+          }
+        });
+      } else { // not found
+        // add to sites.txt
+        archive.addUrlToList(url, function(){
+          // Redirect to loading.html
+          helpers.sendRedirect(response, '/loading.html');
+        });
+      }
+    });
+  });
+};
+
+var actions = {
+  'GET': getSite,
+  'POST': saveSite
+};
+
+// use this pattern to differentiate between archives, static assets, and errors
 exports.handleRequest = function (req, res) {
   var handler = actions[req.method];
+
   if (handler) {
     handler(req, res);
   } else {
-    httpHelpers.send404(res);
+    helpers.send404(res);
   }
-}; 
-
-/*
-exports.handleRequest = function (req, res) {
-  
-
-  if (req.method === 'GET'){
-
-    var urlobj = url.parse(req.url, true);
-    console.log("URLPATH: ", urlobj.path);
-    httpHelpers.serveAssets(res, urlobj.path, function () {
-
-    })
-    if (urlobj.path === "/") {
-      console.log("TRUE don't escape");
-    }
-    res.writeHead(200, headers);
-    res.end("/<input");
-  }
-
-  if (req.method === 'OPTIONS'){
-    res.writeHead(202, headers);
-    res.end();
-  }
-
-  if (req.method === 'POST') {
-    var requestBody = '';  //MAKE OBJECT
-    req.on('data', function (data) {
-      requestBody += data;  //SET URL PROP OF OBJECT
-      console.log(requestBody);
-    //  archive.readListOfUrls();
-    //  saveSite(requestBody);
-    })
-    req.on('end', function(){
-      archive.addUrlToList(JSON.parse(requestBody));
-    })
-    res.writeHead(202, headers);
-    res.end();
-    // res.end(archive.paths.list);
-  }
-
 };
-*/
